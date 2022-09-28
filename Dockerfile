@@ -11,7 +11,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
 COPY php-nimdasx.ini /usr/local/etc/php/conf.d/php-nimdasx.ini
 
 #apk
-RUN apk add autoconf
+RUN apk add autoconf make g++
 
 #phalcon 5 stable
 RUN pecl install phalcon-5.0.2 \
