@@ -1,7 +1,7 @@
 FROM webdevops/php-nginx:8.1-alpine
 
 LABEL maintainer="nimdasx@gmail.com"
-LABEL description="php-8.1 phalcon-5"
+LABEL description="nginx php-8.1 phalcon-5.0"
 
 #set timezone
 RUN ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
