@@ -10,6 +10,6 @@ docker push nimdasx/docker-nginx-php8-phalcon5
 ````
 # build dan push ke github
 ````
-docker build --tag ghcr.io/nimdasx/docker-nginx-php8-phalcon5:master .
-docker push ghcr.io/nimdasx/docker-nginx-php8-phalcon5:master
+docker build --tag ghcr.io/nimdasx/docker-nginx-php8-phalcon5 .
+docker push ghcr.io/nimdasx/docker-nginx-php8-phalcon5
 ````
