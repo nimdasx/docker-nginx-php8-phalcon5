@@ -14,7 +14,7 @@ COPY php-nimdasx.ini /usr/local/etc/php/conf.d/php-nimdasx.ini
 RUN apk add autoconf make g++
 
 #phalcon 5 stable
-RUN pecl install phalcon-5.1.2 \
+RUN pecl install phalcon-5.1.3 \
     && docker-php-ext-enable phalcon
 
 #sqlsrv
