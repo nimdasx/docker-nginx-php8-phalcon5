@@ -1,7 +1,7 @@
-FROM webdevops/php-nginx:8.1-alpine
+FROM webdevops/php-nginx:8.3-alpine
 
 LABEL maintainer="nimdasx@gmail.com"
-LABEL description="nginx php-8.1 phalcon-5.1"
+LABEL description="nginx php-8 phalcon-5"
 
 #set timezone
 RUN ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
@@ -14,7 +14,7 @@ COPY php-nimdasx.ini /usr/local/etc/php/conf.d/php-nimdasx.ini
 RUN apk add autoconf make g++
 
 #phalcon 5 stable
-RUN pecl install phalcon-5.1.3 \
+RUN pecl install phalcon-5.8.0 \
     && docker-php-ext-enable phalcon
 
 #sqlsrv
