@@ -30,3 +30,5 @@ RUN curl -O https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9
 
 #npm
 RUN apk add --no-cache nodejs npm
+
+COPY vhost.conf /opt/docker/etc/nginx/vhost.conf
