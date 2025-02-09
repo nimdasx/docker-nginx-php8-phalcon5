@@ -10,4 +10,6 @@ docker push ghcr.io/nimdasx/nginx-php8-phalcon5
 # build dan push ke docker hub
 docker build --tag nimdasx/nginx-php8-phalcon5 .
 docker push nimdasx/nginx-php8-phalcon5
+
+docker buildx build --platform linux/amd64 --tag nimdasx/nginx-php8-phalcon5 --push .
 ````
