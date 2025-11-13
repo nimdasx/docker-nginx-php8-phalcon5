@@ -12,4 +12,12 @@ docker build --tag nimdasx/nginx-php8-phalcon5 .
 docker push nimdasx/nginx-php8-phalcon5
 
 docker buildx build --platform linux/amd64 --tag nimdasx/nginx-php8-phalcon5 --push .
+
+CR=harbor.sofy.web.id
+PU=x/nginx-php8-phalcon5
+docker login $CR
+docker build -t $CR/$PU .
+docker push $CR/$PU
+docker buildx build --platform linux/amd64 --tag $CR/$PU --push . 
+
 ````
