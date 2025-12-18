@@ -1,5 +1,8 @@
 # docker nginx php-8 phalcon-5
 ````
+# catatan
+kalau pakai alpine dan mengaktifkan ioncube, crash
+
 # run
 docker run -d -p 81:80 -v /Users/sofyan/Dev/php:/app --name dinosaurus nimdasx/nginx-php8-phalcon5
 
