@@ -1,4 +1,4 @@
-FROM webdevops/php-nginx:8.3-alpine
+FROM webdevops/php-nginx:8.4-alpine
 
 LABEL maintainer="nimdasx@gmail.com" \
     description="nginx php-8 phalcon-5"
