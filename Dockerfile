@@ -1,4 +1,4 @@
-FROM webdevops/php-nginx:8.4
+FROM webdevops/php-nginx:8.5
 
 LABEL maintainer="nimdasx@gmail.com" \
     description="nginx php-8 phalcon-5 ioncube"
@@ -26,13 +26,13 @@ RUN chmod +x /usr/local/bin/install-php-extensions \
  && install-php-extensions \
     sqlsrv \
     pdo_sqlsrv \
-    phalcon-5.9.3
+    phalcon-5.13.0
 
-# ionCube (PHP 8.3)
+# ionCube
 RUN curl -fsSL https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
  | tar -xz -C /tmp \
  && PHP_EXT_DIR="$(php -r 'echo ini_get("extension_dir");')" \
- && cp /tmp/ioncube/ioncube_loader_lin_8.3.so "$PHP_EXT_DIR" \
- && echo "zend_extension=$PHP_EXT_DIR/ioncube_loader_lin_8.4.so" \
+ && cp /tmp/ioncube/ioncube_loader_lin_8.5.so "$PHP_EXT_DIR" \
+ && echo "zend_extension=$PHP_EXT_DIR/ioncube_loader_lin_8.5.so" \
     > /usr/local/etc/php/conf.d/00-ioncube.ini \
  && rm -rf /tmp/ioncube
