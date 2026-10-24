@@ -26,7 +26,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions \
  && install-php-extensions \
     sqlsrv \
     pdo_sqlsrv \
-    phalcon-5.13.0
+    phalcon-5.23.0
 
 # ionCube
 RUN curl -fsSL https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
