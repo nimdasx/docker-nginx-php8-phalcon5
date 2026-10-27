@@ -1,7 +1,13 @@
-FROM webdevops/php-nginx:8.5
+ARG PHP_VERSION=8.5
+ARG PHALCON_VERSION=5.23.0
+
+FROM webdevops/php-nginx:${PHP_VERSION}
+
+ARG PHP_VERSION=8.5
+ARG PHALCON_VERSION=5.23.0
 
 LABEL maintainer="nimdasx@gmail.com" \
-    description="nginx php-8 phalcon-5 ioncube"
+    description="nginx php-${PHP_VERSION} phalcon-${PHALCON_VERSION} ioncube"
 
 ENV TZ=Asia/Jakarta
 
@@ -19,20 +25,10 @@ RUN apt-get update \
 COPY php-nimdasx.ini /usr/local/etc/php/conf.d/php-nimdasx.ini
 COPY vhost.conf /opt/docker/etc/nginx/vhost.conf
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
-    /usr/local/bin/install-php-extensions
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/install-php-extensions \
- && install-php-extensions \
+RUN install-php-extensions \
+    ioncube_loader \
     sqlsrv \
     pdo_sqlsrv \
-    phalcon-5.23.0
-
-# ionCube
-RUN curl -fsSL https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
- | tar -xz -C /tmp \
- && PHP_EXT_DIR="$(php -r 'echo ini_get("extension_dir");')" \
- && cp /tmp/ioncube/ioncube_loader_lin_8.5.so "$PHP_EXT_DIR" \
- && echo "zend_extension=$PHP_EXT_DIR/ioncube_loader_lin_8.5.so" \
-    > /usr/local/etc/php/conf.d/00-ioncube.ini \
- && rm -rf /tmp/ioncube
+    phalcon-${PHALCON_VERSION}
