@@ -24,7 +24,8 @@ print_usage() {
     echo "  8.5               Build image PHP 8.5 (Phalcon default: 5.23.0)"
     echo "  8.3               Build image PHP 8.3 (Phalcon default: 5.23.0)"
     echo "  8.3-phalcon5.8    Build image PHP 8.3 dengan Phalcon 5.8.0"
-    echo "  all               Build semua varian (8.5, 8.3, 8.3-phalcon5.8)"
+    echo "  8.1-phalcon5.1    Build image PHP 8.1 dengan Phalcon 5.1.4 (Patched CVE-2026-109618/19)"
+    echo "  all               Build semua varian (8.5, 8.3, 8.3-phalcon5.8, 8.1-phalcon5.1)"
     echo ""
     echo -e "${BLUE}Opsi Tambahan:${NC}"
     echo "  --push       Push ke Docker Hub dan GHCR (multi-platform: linux/amd64,linux/arm64)"
@@ -35,6 +36,7 @@ print_usage() {
     echo "  $0 8.5                     # Build lokal PHP 8.5 untuk platform lokal"
     echo "  $0 8.3 --push              # Build multi-platform dan push PHP 8.3"
     echo "  $0 8.3-phalcon5.8          # Build lokal PHP 8.3 dengan Phalcon 5.8.0"
+    echo "  $0 8.1-phalcon5.1          # Build lokal PHP 8.1 patched dengan Phalcon 5.1.4"
     echo "  $0 all --push              # Build multi-platform dan push semua versi"
     echo "  PHALCON_VERSION=5.23.0 $0 all"
 }
@@ -46,7 +48,7 @@ NO_CACHE_FLAG=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        8.5|8.3|8.3-phalcon5.8|8.3-5.8|all)
+        8.5|8.3|8.3-phalcon5.8|8.3-5.8|8.1-phalcon5.1|8.1-5.1|8.1|all)
             TARGET_VERSION="$1"
             shift
             ;;
@@ -80,9 +82,10 @@ build_single_version() {
     local phalcon_ver="$2"
     local tag_name="$3"
     local is_latest="$4"
+    local php_patch="${5:-false}"
 
     echo -e "\n${BLUE}============================================================${NC}"
-    echo -e "${GREEN}Memulai build PHP ${php_ver} (Phalcon: ${phalcon_ver}) [Tag: ${tag_name}]${NC}"
+    echo -e "${GREEN}Memulai build PHP ${php_ver} (Phalcon: ${phalcon_ver}) [Tag: ${tag_name}] [Patch: ${php_patch}]${NC}"
     echo -e "${BLUE}============================================================${NC}"
 
     local tags=()
@@ -105,6 +108,7 @@ build_single_version() {
             --platform linux/amd64,linux/arm64 \
             --build-arg PHP_VERSION="${php_ver}" \
             --build-arg PHALCON_VERSION="${phalcon_ver}" \
+            --build-arg PHP_PATCH="${php_patch}" \
             "${tags[@]}" \
             "${build_opts[@]}" \
             --push .
@@ -113,6 +117,7 @@ build_single_version() {
         docker buildx build \
             --build-arg PHP_VERSION="${php_ver}" \
             --build-arg PHALCON_VERSION="${phalcon_ver}" \
+            --build-arg PHP_PATCH="${php_patch}" \
             "${tags[@]}" \
             "${build_opts[@]}" \
             --load .
@@ -125,18 +130,22 @@ default_phalcon="${PHALCON_VERSION:-$PHALCON_VERSION_DEFAULT}"
 
 case "$TARGET_VERSION" in
     8.5)
-        build_single_version "8.5" "${default_phalcon}" "8.5" "true"
+        build_single_version "8.5" "${default_phalcon}" "8.5" "true" "false"
         ;;
     8.3)
-        build_single_version "8.3" "${default_phalcon}" "8.3" "false"
+        build_single_version "8.3" "${default_phalcon}" "8.3" "false" "false"
         ;;
     8.3-phalcon5.8|8.3-5.8)
-        build_single_version "8.3" "5.8.0" "8.3-phalcon5.8" "false"
+        build_single_version "8.3" "5.8.0" "8.3-phalcon5.8" "false" "false"
+        ;;
+    8.1-phalcon5.1|8.1-5.1|8.1)
+        build_single_version "8.1" "5.1.4" "8.1-phalcon5.1" "false" "true"
         ;;
     all)
-        build_single_version "8.5" "${default_phalcon}" "8.5" "true"
-        build_single_version "8.3" "${default_phalcon}" "8.3" "false"
-        build_single_version "8.3" "5.8.0" "8.3-phalcon5.8" "false"
+        build_single_version "8.5" "${default_phalcon}" "8.5" "true" "false"
+        build_single_version "8.3" "${default_phalcon}" "8.3" "false" "false"
+        build_single_version "8.3" "5.8.0" "8.3-phalcon5.8" "false" "false"
+        build_single_version "8.1" "5.1.4" "8.1-phalcon5.1" "false" "true"
         ;;
 esac
 

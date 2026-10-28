@@ -39,13 +39,20 @@ jobs:
         target:
           - php: '8.5'
             phalcon: '5.23.0'
+            patch: 'false'
             tag: '8.5'
           - php: '8.3'
             phalcon: '5.23.0'
+            patch: 'false'
             tag: '8.3'
           - php: '8.3'
             phalcon: '5.8.0'
+            patch: 'false'
             tag: '8.3-phalcon5.8'
+          - php: '8.1'
+            phalcon: '5.1.4'
+            patch: 'true'
+            tag: '8.1-phalcon5.1'
         platform:
           - os: ubuntu-latest
             arch: linux/amd64
@@ -81,6 +88,7 @@ jobs:
         run: |
           PHP_VER="${{ matrix.target.php }}"
           PHALCON_VER="${{ matrix.target.phalcon }}"
+          PHP_PATCH="${{ matrix.target.patch }}"
           TAG_NAME="${{ matrix.target.tag }}"
           SUFFIX="${{ matrix.platform.suffix }}"
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -92,6 +100,7 @@ jobs:
           
           echo "php_version=${PHP_VER}" >> $GITHUB_OUTPUT
           echo "phalcon_version=${PHALCON_VER}" >> $GITHUB_OUTPUT
+          echo "php_patch=${PHP_PATCH}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: Build and Push (Native Architecture)
@@ -105,6 +114,7 @@ jobs:
           build-args: |
             PHP_VERSION=${{ steps.meta.outputs.php_version }}
             PHALCON_VERSION=${{ steps.meta.outputs.phalcon_version }}
+            PHP_PATCH=${{ steps.meta.outputs.php_patch }}
           cache-from: type=gha,scope=${{ matrix.target.tag }}-${{ matrix.platform.suffix }}
           cache-to: type=gha,mode=max,scope=${{ matrix.target.tag }}-${{ matrix.platform.suffix }}
 
@@ -123,6 +133,8 @@ jobs:
           - tag: '8.3'
             is_latest: false
           - tag: '8.3-phalcon5.8'
+            is_latest: false
+          - tag: '8.1-phalcon5.1'
             is_latest: false
 
     steps:
