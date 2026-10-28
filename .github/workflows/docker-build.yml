@@ -18,11 +18,6 @@ on:
         required: true
         type: boolean
         default: true
-      phalcon_version:
-        description: 'Versi Phalcon'
-        required: true
-        type: string
-        default: '5.23.0'
 
 permissions:
   contents: read
@@ -34,14 +29,23 @@ concurrency:
 
 jobs:
   build:
-    name: Build PHP ${{ matrix.php }} (${{ matrix.platform.suffix }})
+    name: Build ${{ matrix.target.tag }} (${{ matrix.platform.suffix }})
     runs-on: ${{ matrix.platform.os }}
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.5', '8.3']
+        target:
+          - php: '8.5'
+            phalcon: '5.23.0'
+            tag: '8.5'
+          - php: '8.3'
+            phalcon: '5.23.0'
+            tag: '8.3'
+          - php: '8.3'
+            phalcon: '5.8.0'
+            tag: '8.3-phalcon5.8'
         platform:
           - os: ubuntu-latest
             arch: linux/amd64
@@ -74,21 +78,20 @@ jobs:
 
       - name: Tentukan Tags dan Argumen
         id: meta
-        env:
-          INPUT_PHALCON_VERSION: ${{ inputs.phalcon_version }}
         run: |
-          PHP_VER="${{ matrix.php }}"
+          PHP_VER="${{ matrix.target.php }}"
+          PHALCON_VER="${{ matrix.target.phalcon }}"
+          TAG_NAME="${{ matrix.target.tag }}"
           SUFFIX="${{ matrix.platform.suffix }}"
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           
-          PHALCON_VER="${INPUT_PHALCON_VERSION:-5.23.0}"
-          echo "phalcon_version=${PHALCON_VER}" >> $GITHUB_OUTPUT
-          
-          TAGS="ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${PHP_VER}-${SUFFIX}"
+          TAGS="ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${TAG_NAME}-${SUFFIX}"
           if [ -n "$DOCKERHUB_USERNAME" ]; then
-            TAGS="${TAGS},${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${PHP_VER}-${SUFFIX}"
+            TAGS="${TAGS},${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${TAG_NAME}-${SUFFIX}"
           fi
           
+          echo "php_version=${PHP_VER}" >> $GITHUB_OUTPUT
+          echo "phalcon_version=${PHALCON_VER}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: Build and Push (Native Architecture)
@@ -100,13 +103,13 @@ jobs:
           push: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_images) }}
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            PHP_VERSION=${{ matrix.php }}
+            PHP_VERSION=${{ steps.meta.outputs.php_version }}
             PHALCON_VERSION=${{ steps.meta.outputs.phalcon_version }}
-          cache-from: type=gha,scope=${{ matrix.php }}-${{ matrix.platform.suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.php }}-${{ matrix.platform.suffix }}
+          cache-from: type=gha,scope=${{ matrix.target.tag }}-${{ matrix.platform.suffix }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target.tag }}-${{ matrix.platform.suffix }}
 
   merge:
-    name: Merge Manifest PHP ${{ matrix.php }}
+    name: Merge Manifest ${{ matrix.target.tag }}
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_images)
@@ -114,10 +117,12 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     strategy:
       matrix:
-        include:
-          - php: '8.5'
+        target:
+          - tag: '8.5'
             is_latest: true
-          - php: '8.3'
+          - tag: '8.3'
+            is_latest: false
+          - tag: '8.3-phalcon5.8'
             is_latest: false
 
     steps:
@@ -140,30 +145,30 @@ jobs:
 
       - name: Gabungkan Manifest Multi-Arch
         run: |
-          PHP_VER="${{ matrix.php }}"
-          IS_LATEST="${{ matrix.is_latest }}"
+          TAG_NAME="${{ matrix.target.tag }}"
+          IS_LATEST="${{ matrix.target.is_latest }}"
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           
           echo "Menggabungkan manifest untuk GHCR..."
-          GHCR_TARGETS="-t ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${PHP_VER}"
+          GHCR_TARGETS="-t ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${TAG_NAME}"
           if [ "$IS_LATEST" = "true" ]; then
             GHCR_TARGETS="${GHCR_TARGETS} -t ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:latest"
           fi
           
           docker buildx imagetools create ${GHCR_TARGETS} \
-            ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${PHP_VER}-amd64 \
-            ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${PHP_VER}-arm64
+            ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${TAG_NAME}-amd64 \
+            ghcr.io/${OWNER_LC}/nginx-php8-phalcon5:${TAG_NAME}-arm64
           
           if [ -n "$DOCKERHUB_USERNAME" ]; then
             echo "Menggabungkan manifest untuk Docker Hub..."
-            DH_TARGETS="-t ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${PHP_VER}"
+            DH_TARGETS="-t ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${TAG_NAME}"
             if [ "$IS_LATEST" = "true" ]; then
               DH_TARGETS="${DH_TARGETS} -t ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:latest"
             fi
             
             docker buildx imagetools create ${DH_TARGETS} \
-              ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${PHP_VER}-amd64 \
-              ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${PHP_VER}-arm64
+              ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${TAG_NAME}-amd64 \
+              ${DOCKERHUB_USERNAME}/nginx-php8-phalcon5:${TAG_NAME}-arm64
           fi
           
-          echo "✓ Selesai membuat manifest multi-arch untuk PHP ${PHP_VER}!"
+          echo "✓ Selesai membuat manifest multi-arch untuk ${TAG_NAME}!"
